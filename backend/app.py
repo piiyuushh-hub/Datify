@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 # Load the trained model pipeline
-MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'model.pkl')
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'model.pkl')
 try:
     model_pipeline = joblib.load(MODEL_PATH)
     print("Machine Learning Model loaded successfully.")
