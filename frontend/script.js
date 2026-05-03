@@ -245,16 +245,34 @@ if (document.getElementById('prediction-form')) {
 
         try {
             // Call Node API which routes to FastAPI and saves to MongoDB
-            const response = await fetch(`${NODE_API_URL}/predict`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
+            let response;
+            let data;
+            let retries = 4; // Try up to 4 times (max 40 seconds of waiting)
+            
+            while (retries > 0) {
+                response = await fetch(`${NODE_API_URL}/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
 
-            const data = await response.json();
+                // Render returns 502/504 when upstream is booting
+                if (response.status === 502 || response.status === 504) {
+                    retries--;
+                    if (retries > 0) {
+                        predictBtn.innerHTML = '<span class="loading-pulse">☕ Waking up AI Engine (this takes ~30s)...</span>';
+                        await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds before next try
+                        continue;
+                    }
+                }
+                
+                data = await response.json();
+                break;
+            }
+
             predictBtn.innerHTML = originalText;
 
             if (response.ok) {
