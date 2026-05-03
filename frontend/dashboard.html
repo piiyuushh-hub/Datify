@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datify | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo-container">
+            <div class="logo-icon"></div>
+            <span class="logo-text">Datify <span class="logo-ai">AI</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="#prediction-section">Data Prediction</a>
+            <a href="models.html">ML Models</a>
+            <a href="#" id="logout-btn">Logout</a>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <div class="badge-green" id="welcome-badge">Welcome</div>
+            <button id="theme-toggle" class="theme-btn">☀️</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-wrapper">
+        
+        <!-- Hero Section -->
+        <div class="card hero-card">
+            <div class="hero-content">
+                <h1>Data <span class="text-gradient">Prediction & Analytics</span></h1>
+                <p>Predict data usage patterns using ML regression models trained on Indian telecom customers. Explore behavioral trends by demographics, hardware, and streaming habits.</p>
+                <div class="hero-stats">
+                    <div class="mini-stat">
+                        <div class="mini-stat-val">5.01</div>
+                        <div class="mini-stat-label">AVG DATA (GB)</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-val text-green">₹85K</div>
+                        <div class="mini-stat-label">AVG SALARY</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-val">49.2</div>
+                        <div class="mini-stat-label">AVG CALLS/MO</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Stats -->
+        <div class="stats-grid-4">
+            <div class="stat-card c-green">
+                <div class="stat-header"><span>AVG DATA USED</span> <span>📊</span></div>
+                <div class="stat-main">5.01 <span class="text-xs">GB</span></div>
+                <p class="text-xs text-green">σ = 2.91 GB</p>
+            </div>
+            <div class="stat-card c-purple">
+                <div class="stat-header"><span>AVG ESTIMATED SALARY</span> <span>💰</span></div>
+                <div class="stat-main">₹85K</div>
+                <p class="text-xs">Median: ₹84,990</p>
+            </div>
+            <div class="stat-card c-yellow">
+                <div class="stat-header"><span>AVG CALLS / MONTH</span> <span>📞</span></div>
+                <div class="stat-main">49.2</div>
+                <p class="text-xs">Max: 108 calls</p>
+            </div>
+            <div class="stat-card c-pink">
+                <div class="stat-header"><span>AVG SMS / MONTH</span> <span>💬</span></div>
+                <div class="stat-main">24.1</div>
+                <p class="text-xs">Max: 53 SMS</p>
+            </div>
+        </div>
+
+        <!-- Section 1 -->
+        <div class="section-header" id="prediction-section">🤖 LIVE DATA PREDICTION ENGINE</div>
+        <div class="card">
+            <div class="predict-header">
+                <div>
+                    <h2>Customer Data Profile Predictor</h2>
+                    <p>Select target variable to predict based on customer demographics & usage patterns.</p>
+                </div>
+                <div class="model-badge">Random Forest Regressor • R² ≈ 0.97</div>
+            </div>
+
+            <div class="info-banner">
+                ℹ️ Data usage is modelled as independent of churn status — usage patterns don't cause churn; rather, satisfaction & pricing do.
+            </div>
+
+            <form id="prediction-form">
+                <div class="form-grid">
+                    <div class="input-wrapper">
+                        <label>Age</label>
+                        <input type="number" id="age" required min="5" max="120" value="32">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Gender</label>
+                        <select id="gender" required>
+                            <option value="M" selected>Male</option>
+                            <option value="F">Female</option>
+                        </select>
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Telecom Partner</label>
+                        <select id="telecom_partner" required>
+                            <option value="Reliance Jio" selected>Reliance Jio</option>
+                            <option value="Airtel">Airtel</option>
+                            <option value="Vodafone">Vodafone</option>
+                            <option value="BSNL">BSNL</option>
+                        </select>
+                    </div>
+                    <div class="input-wrapper">
+                        <label>City</label>
+                        <select id="city" required>
+                            <option value="Mumbai" selected>Mumbai</option>
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                            <option value="Kolkata">Kolkata</option>
+                        </select>
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Est. Salary (₹)</label>
+                        <input type="number" id="estimated_salary" required min="0" max="10000000" value="80000">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Calls Made</label>
+                        <input type="number" id="calls_made" required min="100" max="10000" value="150">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>SMS Sent</label>
+                        <input type="number" id="sms_sent" required min="50" max="10000" value="100">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Num Dependents</label>
+                        <input type="number" id="num_dependents" required min="0" max="15" value="2">
+                    </div>
+                    
+                    <!-- New Behavioral Fields -->
+                    <div class="input-wrapper">
+                        <label>Streaming (Hrs/Day)</label>
+                        <input type="number" id="streaming_hours" step="0.1" required min="0" max="24" value="2.5">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Gaming (Hrs/Day)</label>
+                        <input type="number" id="gaming_hours" step="0.1" required min="0" max="24" value="1.0">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Social Media (Hrs/Day)</label>
+                        <input type="number" id="social_media_hours" step="0.1" required min="0" max="24" value="3.0">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Wi-Fi Ratio</label>
+                        <input type="number" id="wifi_ratio" step="0.01" required min="0" max="1" value="0.65">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Weekend Ratio</label>
+                        <input type="number" id="weekend_usage_ratio" step="0.01" required min="0" max="1" value="0.30">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Background Data (MB)</label>
+                        <input type="number" id="background_data_mb" step="1" required min="0" max="5000" value="250">
+                    </div>
+                    <div class="input-wrapper">
+                        <label>Auto Update</label>
+                        <select id="auto_update" required>
+                            <option value="1" selected>Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="predict-btn">
+                    ⚡ Predict Data Usage
+                </button>
+            </form>
+
+            <div id="prediction-result" class="hidden" style="margin-top: 2rem; width: 100%;">
+                <!-- Prediction Value Box -->
+                <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.2rem;">
+                            <h3 style="font-size: 1.1rem; margin: 0;">Predicted Monthly Usage</h3>
+                            <button id="pin-baseline-btn" class="theme-btn" style="padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3);">📌 Pin Baseline</button>
+                            <button id="clear-baseline-btn" class="theme-btn" style="display: none; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; background: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.3);">✖️ Clear</button>
+                        </div>
+                        <p class="text-xs">Based on inputted behavioural profile</p>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <div class="result-val" style="display: flex; align-items: baseline; gap: 0.5rem;">
+                            <span id="data-value" style="font-size: 3rem; font-weight: 800; color: var(--accent-green); line-height: 1;">0</span> 
+                            <span class="text-xs" style="font-weight: 700; padding-bottom: 0.5rem;">GB</span>
+                        </div>
+                        <div id="baseline-delta" style="font-size: 0.85rem; font-weight: bold; margin-top: 4px; display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- AI Insights Box -->
+                <div id="xai-container" style="display: none; text-align: left; background: rgba(59, 130, 246, 0.05); padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-purple); margin-bottom: 0.75rem; letter-spacing: 1px;">🤖 AI Insights</h3>
+                    <div id="xai-list" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; margin-top: 2rem;">
+            <div class="section-header" style="margin-bottom: 0; margin-top: 0;">📊 USAGE TRENDS BY DEMOGRAPHICS</div>
+            <div>
+                <button id="refresh-charts-btn" class="theme-btn" style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: bold; background: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color); margin-right: 0.5rem;">🔄 Refresh</button>
+                <button id="clear-graphs-btn" class="theme-btn" style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: bold; background: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2);">🗑️ Clear Data</button>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="card">
+                <h3>Data Usage vs Salary</h3>
+                <p>Scatter relationship (Sample)</p>
+                <div class="chart-wrapper">
+                    <canvas id="scatterChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Salary Brackets</h3>
+                <p>Distribution segments</p>
+                <div class="chart-wrapper">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h3>SMS Trends by City</h3>
+                <p>Radar chart analysis</p>
+                <div class="chart-wrapper">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Prediction History -->
+        <div class="section-header">📜 PREDICTION HISTORY</div>
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h3 style="margin-bottom: 0;">Your Recent Predictions</h3>
+                    <p style="margin-bottom: 0;">A log of data usage forecasts run on your account.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="clear-history-list-btn" class="theme-btn" style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: bold; background: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid rgba(220, 53, 69, 0.2);">🗑️ Clear History</button>
+                    <button id="export-csv-btn" class="theme-btn" style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: bold; background: var(--accent-purple); color: white;">📥 Export CSV</button>
+                </div>
+            </div>
+            <div id="history-list" class="history-container">
+                <!-- History items injected via JS -->
+                <p class="text-xs">No prediction history found.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
