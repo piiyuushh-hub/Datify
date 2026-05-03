@@ -12,7 +12,11 @@ router.post('/', auth, async (req, res) => {
         const inputs = req.body;
         
         // 1. Call FastAPI Service
-        const fastApiUrl = process.env.FASTAPI_URL + '/predict';
+        let fastApiUrl = process.env.FASTAPI_URL || '';
+        if (fastApiUrl.endsWith('/')) {
+            fastApiUrl = fastApiUrl.slice(0, -1);
+        }
+        fastApiUrl += '/predict';
         const response = await axios.post(fastApiUrl, inputs);
         
         const predicted_data_used_gb = response.data.predicted_data_used_gb;
@@ -38,8 +42,12 @@ router.post('/', auth, async (req, res) => {
     } catch (err) {
         console.error('Prediction Route Error:', err.message);
         if (err.response) {
-            // Error from FastAPI
-            return res.status(err.response.status).json(err.response.data);
+            // Error from FastAPI or Render Proxy
+            let errorData = err.response.data;
+            if (typeof errorData === 'string') {
+                return res.status(err.response.status).json({ detail: `Server responded with status ${err.response.status}: ${errorData.substring(0, 80)}...` });
+            }
+            return res.status(err.response.status).json(errorData);
         }
         res.status(500).json({ error: 'Server error during prediction', details: err.message });
     }
