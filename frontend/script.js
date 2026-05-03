@@ -164,6 +164,44 @@ if (document.getElementById('prediction-form')) {
         window.location.href = 'index.html';
     });
 
+    // --- RANGE SLIDER LOGIC ---
+    const sliderIds = ['age', 'streaming_hours', 'gaming_hours', 'social_media_hours', 'wifi_ratio', 'weekend_usage_ratio'];
+    sliderIds.forEach(id => {
+        const el = document.getElementById(id);
+        const valEl = document.getElementById(id + '_val');
+        if(el && valEl) {
+            el.addEventListener('input', () => {
+                valEl.textContent = el.value;
+            });
+        }
+    });
+
+    // --- QUICK PROFILES LOGIC ---
+    const profiles = {
+        student: { age: 20, streaming_hours: 4.0, gaming_hours: 3.5, social_media_hours: 5.0, wifi_ratio: 0.8, weekend_usage_ratio: 0.4, calls_made: 50, sms_sent: 120, estimated_salary: 0, background_data_mb: 500, telecom_partner: "Reliance Jio", city: "Delhi" },
+        worker: { age: 35, streaming_hours: 1.5, gaming_hours: 0.5, social_media_hours: 1.5, wifi_ratio: 0.9, weekend_usage_ratio: 0.2, calls_made: 300, sms_sent: 40, estimated_salary: 120000, background_data_mb: 200, telecom_partner: "Airtel", city: "Bangalore" },
+        gamer: { age: 24, streaming_hours: 3.0, gaming_hours: 8.0, social_media_hours: 2.0, wifi_ratio: 0.95, weekend_usage_ratio: 0.5, calls_made: 30, sms_sent: 10, estimated_salary: 40000, background_data_mb: 800, telecom_partner: "Airtel", city: "Mumbai" }
+    };
+
+    document.querySelectorAll('.quick-profile-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const profileId = e.target.getAttribute('data-profile');
+            const data = profiles[profileId];
+            if(!data) return;
+            
+            Object.keys(data).forEach(key => {
+                const el = document.getElementById(key);
+                if(el) {
+                    el.value = data[key];
+                    if (sliderIds.includes(key)) {
+                        document.getElementById(key + '_val').textContent = data[key];
+                    }
+                }
+            });
+            showToast("Profile loaded successfully!", "success");
+        });
+    });
+
     // 1. Prediction API Submission
     // --- BASELINE COMPARISON LOGIC ---
     let currentBaseline = null;
@@ -306,10 +344,12 @@ if (document.getElementById('prediction-form')) {
                     xaiContainer.style.display = 'none';
                 }
 
+
+
                 // Refresh History & Live Charts
                 fetchHistory();
                 if (typeof fetchAndRenderAnalytics === 'function') {
-                    fetchAndRenderAnalytics();
+                    fetchAndRenderAnalytics().catch(() => {});
                 }
             } else {
                 showToast('Prediction Error: ' + (data.error || data.detail || 'Unknown error'), 'error');
@@ -317,7 +357,10 @@ if (document.getElementById('prediction-form')) {
             
         } catch (error) {
             console.error(error);
-            showToast('Failed to connect to the Node Backend (Port 5000). Ensure it is running.', 'error');
+            // Only show this error if not a 502 retry issue
+            if (error.name !== 'SyntaxError') {
+                showToast('Failed to connect to the Node Backend (Port 5000). Ensure it is running.', 'error');
+            }
             predictBtn.innerHTML = originalText;
         } finally {
             predictBtn.style.opacity = '1';

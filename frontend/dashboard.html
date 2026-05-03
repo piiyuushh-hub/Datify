@@ -89,10 +89,19 @@
             </div>
 
             <form id="prediction-form">
+                <div class="quick-profiles-container" style="margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.5rem; letter-spacing: 1px; font-weight: bold;">⚡ Quick Fill Profiles</div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button type="button" class="quick-profile-btn" data-profile="student">🧑‍🎓 Typical Student</button>
+                        <button type="button" class="quick-profile-btn" data-profile="worker">💻 Remote Worker</button>
+                        <button type="button" class="quick-profile-btn" data-profile="gamer">🎮 Heavy Gamer</button>
+                    </div>
+                </div>
+
                 <div class="form-grid">
                     <div class="input-wrapper">
-                        <label>Age</label>
-                        <input type="number" id="age" required min="5" max="120" value="32">
+                        <label style="display: flex; justify-content: space-between;">Age <span id="age_val" class="slider-val">32</span></label>
+                        <input type="range" id="age" required min="5" max="120" value="32" class="styled-slider">
                     </div>
                     <div class="input-wrapper">
                         <label>Gender</label>
@@ -140,24 +149,34 @@
                     
                     <!-- New Behavioral Fields -->
                     <div class="input-wrapper">
-                        <label>Streaming (Hrs/Day)</label>
-                        <input type="number" id="streaming_hours" step="0.1" required min="0" max="24" value="2.5">
+                        <label style="display: flex; justify-content: space-between;">Streaming (Hrs/Day) <span id="streaming_hours_val" class="slider-val">2.5</span></label>
+                        <input type="range" id="streaming_hours" step="0.1" required min="0" max="24" value="2.5" class="styled-slider">
                     </div>
                     <div class="input-wrapper">
-                        <label>Gaming (Hrs/Day)</label>
-                        <input type="number" id="gaming_hours" step="0.1" required min="0" max="24" value="1.0">
+                        <label style="display: flex; justify-content: space-between;">Gaming (Hrs/Day) <span id="gaming_hours_val" class="slider-val">1.0</span></label>
+                        <input type="range" id="gaming_hours" step="0.1" required min="0" max="24" value="1.0" class="styled-slider">
                     </div>
                     <div class="input-wrapper">
-                        <label>Social Media (Hrs/Day)</label>
-                        <input type="number" id="social_media_hours" step="0.1" required min="0" max="24" value="3.0">
+                        <label style="display: flex; justify-content: space-between;">Social Media (Hrs/Day) <span id="social_media_hours_val" class="slider-val">3.0</span></label>
+                        <input type="range" id="social_media_hours" step="0.1" required min="0" max="24" value="3.0" class="styled-slider">
                     </div>
                     <div class="input-wrapper">
-                        <label>Wi-Fi Ratio</label>
-                        <input type="number" id="wifi_ratio" step="0.01" required min="0" max="1" value="0.65">
+                        <label style="display: flex; justify-content: space-between;">
+                            <span class="tooltip-container">Wi-Fi Ratio <span class="tooltip-icon">?</span>
+                                <div class="tooltip-box">A ratio from 0 to 1. 0.5 means you use Wi-Fi 50% of the time, significantly lowering your cellular data prediction.</div>
+                            </span>
+                            <span id="wifi_ratio_val" class="slider-val">0.65</span>
+                        </label>
+                        <input type="range" id="wifi_ratio" step="0.01" required min="0" max="1" value="0.65" class="styled-slider">
                     </div>
                     <div class="input-wrapper">
-                        <label>Weekend Ratio</label>
-                        <input type="number" id="weekend_usage_ratio" step="0.01" required min="0" max="1" value="0.30">
+                        <label style="display: flex; justify-content: space-between;">
+                            <span class="tooltip-container">Weekend Ratio <span class="tooltip-icon">?</span>
+                                <div class="tooltip-box">Proportion of your usage that happens strictly on the weekend. (e.g., 0.3 means 30%).</div>
+                            </span>
+                            <span id="weekend_usage_ratio_val" class="slider-val">0.30</span>
+                        </label>
+                        <input type="range" id="weekend_usage_ratio" step="0.01" required min="0" max="1" value="0.30" class="styled-slider">
                     </div>
                     <div class="input-wrapper">
                         <label>Background Data (MB)</label>
@@ -197,10 +216,17 @@
                     </div>
                 </div>
 
-                <!-- AI Insights Box -->
-                <div id="xai-container" style="display: none; text-align: left; background: rgba(59, 130, 246, 0.05); padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                    <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-purple); margin-bottom: 0.75rem; letter-spacing: 1px;">🤖 AI Insights</h3>
-                    <div id="xai-list" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                <!-- Analysis Section: Insights & Breakdown -->
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                    
+                    <!-- AI Insights Box -->
+                    <div id="xai-container" style="flex: 1; min-width: 250px; display: none; text-align: left; background: rgba(59, 130, 246, 0.05); padding: 1rem 1.5rem; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                        <h3 style="font-size: 0.8rem; text-transform: uppercase; color: var(--accent-purple); margin-bottom: 0.75rem; letter-spacing: 1px;">🤖 AI Insights</h3>
+                        <div id="xai-list" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+                    </div>
+
+
+
                 </div>
             </div>
         </div>
