@@ -30,6 +30,20 @@ app.use('/api/auth', authRoutes);
 app.use('/api/predict', predictRoutes);
 app.use('/api/history', historyRoutes);
 
+// Silent Wakeup Route for Render Free Tier
+const axios = require('axios');
+app.get('/api/wakeup', async (req, res) => {
+    try {
+        let fastApiUrl = process.env.FASTAPI_URL || '';
+        if (fastApiUrl.endsWith('/')) fastApiUrl = fastApiUrl.slice(0, -1);
+        // Fire and forget to start waking up the Python server
+        axios.get(fastApiUrl + '/docs').catch(() => {});
+        res.json({ success: true, message: "Wakeup signal sent" });
+    } catch (err) {
+        res.json({ success: true, message: "Wakeup signal sent (with error)" });
+    }
+});
+
 // Catch-all route to serve the frontend for any other request
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
