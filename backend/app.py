@@ -21,8 +21,8 @@ MODEL_PATH = os.path.join(os.path.dirname(__file__), 'model.pkl')
 try:
     model_pipeline = joblib.load(MODEL_PATH)
     print("Machine Learning Model loaded successfully.")
-except FileNotFoundError:
-    print(f"Warning: model.pkl not found at {MODEL_PATH}. Prediction will fail. Please run train_models.py first.")
+except Exception as e:
+    print(f"Error loading model from {MODEL_PATH}: {e}")
     model_pipeline = None
 
 # Input Data Schema
