@@ -16,9 +16,13 @@ router.post('/', auth, async (req, res) => {
         const scriptPath = path.join(__dirname, '../../backend/run_predict.py');
         const inputStr = JSON.stringify(inputs);
 
-        execFile('python', [scriptPath, inputStr], async (error, stdout, stderr) => {
+        // Render environments (Linux) typically use 'python3', Windows uses 'python'
+        const pythonExecutable = process.platform === 'win32' ? 'python' : 'python3';
+
+        execFile(pythonExecutable, [scriptPath, inputStr], async (error, stdout, stderr) => {
             if (error) {
                 console.error('Python execution error:', error);
+                console.error('Stderr:', stderr);
                 return res.status(500).json({ error: 'Server error during prediction execution' });
             }
             
