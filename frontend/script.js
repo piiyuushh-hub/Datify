@@ -155,9 +155,6 @@ if (document.getElementById('prediction-form')) {
     // Fetch History on load
     fetchHistory();
 
-    // Silently wake up the Python server in the background
-    fetch(`${NODE_API_URL}/wakeup`).catch(() => console.log('Wakeup trigger sent'));
-
     document.getElementById('logout-btn').addEventListener('click', () => {
         localStorage.removeItem('omnidata_token');
         localStorage.removeItem('omnidata_user');

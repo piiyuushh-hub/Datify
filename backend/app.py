@@ -73,8 +73,14 @@ def predict_data_usage(req: PredictionRequest):
     df = pd.DataFrame(data)
     
     try:
-        # Predict
-        prediction = model_pipeline.predict(df)[0]
+        # Predict using ML model
+        base_prediction = model_pipeline.predict(df)[0]
+        
+        # Heuristic adjustment: Make weekend_usage_ratio visibly impact the prediction 
+        # (Assuming typical weekend ratio is ~0.28 i.e., 2/7 days. Higher ratio = more binge watching = more data)
+        weekend_modifier = 1.0 + (req.weekend_usage_ratio - 0.28) * 0.4
+        prediction = base_prediction * weekend_modifier
+
         # Data usage cannot be negative
         predicted_gb = max(0, round(prediction, 2))
         
@@ -92,6 +98,11 @@ def predict_data_usage(req: PredictionRequest):
             
         if req.gaming_hours > 2.0:
             explanations.append({"feature": "Gaming", "effect": "positive", "text": "Active mobile gaming contributed significantly to the prediction."})
+            
+        if req.weekend_usage_ratio > 0.6:
+            explanations.append({"feature": "Weekend Usage", "effect": "positive", "text": "Concentrating your data usage on weekends generally increases total monthly consumption due to binge habits."})
+        elif req.weekend_usage_ratio < 0.15:
+            explanations.append({"feature": "Weekend Usage", "effect": "negative", "text": "Low weekend usage suggests you use data strictly for necessities, keeping overall consumption lower."})
         
         if req.calls_made > 100:
             explanations.append({"feature": "Calls", "effect": "neutral", "text": "High call volume indicates heavy phone usage but doesn't heavily impact cellular data."})
