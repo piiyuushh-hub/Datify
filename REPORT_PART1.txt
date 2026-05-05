@@ -1,0 +1,538 @@
+
+================================================================================
+         DATIFY AI - COMPREHENSIVE PROJECT REPORT (PART 1 OF 3)
+         Monthly Data Usage Predictor using Machine Learning
+================================================================================
+
+REPORT SECTIONS IN THIS FILE:
+  - Chapter 1: Project Overview & Introduction
+  - Chapter 2: System Architecture
+  - Chapter 3: The Dataset
+  - Chapter 4: Data Cleaning & Preprocessing
+  - Chapter 5: Feature Engineering & Target Variable
+
+================================================================================
+CHAPTER 1: PROJECT OVERVIEW & INTRODUCTION
+================================================================================
+
+1.1 Project Name
+-----------------
+Datify AI — An Intelligent Telecom Data Usage Prediction Platform
+
+1.2 Project Purpose
+--------------------
+Datify is a full-stack, production-grade machine learning web application built
+to predict the monthly cellular data consumption of telecom customers in India.
+It combines a Python-based machine learning backend with a Node.js API gateway,
+a MongoDB database, and a modern responsive frontend to deliver real-time data
+usage predictions with AI-driven explanations.
+
+The core idea is simple: given a customer's demographic profile (age, gender,
+city, salary) and their behavioural habits (streaming hours, gaming hours,
+social media usage, Wi-Fi ratio, etc.), the system can accurately forecast how
+many gigabytes (GB) of mobile data that customer will consume in a month.
+
+This is immensely useful for:
+  - Telecom operators who want to recommend the right data plan to customers
+  - Analysts studying data consumption trends across cities and demographics
+  - Customers who want to understand their own usage patterns
+  - Network planners who need to forecast bandwidth demand
+
+1.3 Project Goals
+------------------
+  1. Build a regression ML model to predict monthly data usage in GB
+  2. Train, evaluate, and compare multiple machine learning algorithms
+  3. Automatically select and deploy the best-performing model
+  4. Expose the model through a REST API (FastAPI + Node.js)
+  5. Persist user data and prediction history in MongoDB
+  6. Deliver a premium, interactive web dashboard for non-technical users
+  7. Provide Explainable AI (XAI) insights so users understand predictions
+
+1.4 Technology Stack
+---------------------
+  LAYER               TECHNOLOGY
+  ─────────────────────────────────────────────────────
+  Machine Learning    Python 3, scikit-learn, pandas, numpy, joblib
+  ML API              FastAPI (Python), Uvicorn ASGI server
+  Backend Gateway     Node.js, Express.js
+  Database            MongoDB Atlas (cloud), Mongoose ODM
+  Authentication      JWT (JSON Web Tokens), bcryptjs
+  Frontend            Vanilla HTML5, CSS3, JavaScript (ES6+)
+  Charts              Chart.js (scatter, bar, radar)
+  Deployment Script   Windows Batch (.bat) file
+
+================================================================================
+CHAPTER 2: SYSTEM ARCHITECTURE
+================================================================================
+
+2.1 High-Level Architecture Overview
+--------------------------------------
+The project follows a three-tier architecture:
+
+  [ Browser/Frontend ]
+         |
+         | HTTP Requests (REST API calls)
+         v
+  [ Node.js Express Server - Port 5000 ]
+         |                    |
+         | Auth/History        | Prediction Requests
+         v                    v
+  [ MongoDB Atlas ]    [ FastAPI ML Server - Port 8001 ]
+                              |
+                              v
+                    [ model.pkl - Trained ML Pipeline ]
+
+The frontend NEVER calls the ML server directly. All requests go through the
+Node.js gateway, which handles authentication, logging, and persistence.
+
+2.2 Component Breakdown
+------------------------
+
+COMPONENT 1: Python ML Training Script (train_models.py)
+  - Located at the project root
+  - Reads the CSV dataset
+  - Cleans and preprocesses data
+  - Trains three models: Linear Regression, Random Forest, Gradient Boosting
+  - Evaluates each model using RMSE and R² score
+  - Saves the best model as backend/model.pkl using joblib
+
+COMPONENT 2: FastAPI Backend (backend/app.py)
+  - A lightweight Python REST API
+  - Loads model.pkl on startup
+  - Exposes a single POST endpoint: /predict
+  - Accepts 15 input features as JSON
+  - Returns the predicted GB value plus XAI explanations
+  - Runs internally on port 8001 (not exposed publicly)
+
+COMPONENT 3: Persistent Python Worker (backend/run_predict.py)
+  - An alternative prediction worker that stays alive in memory
+  - Loads the model ONCE at startup (eliminates repeated loading overhead)
+  - Listens on stdin for JSON input, writes JSON result to stdout
+  - Used to avoid the cold-start latency problem
+
+COMPONENT 4: Node.js API Gateway (node_backend/server.js)
+  - Main entry point for all external traffic on port 5000
+  - Spawns the FastAPI process as a child process automatically
+  - Handles CORS, static file serving, and routing
+  - Routes: /api/auth, /api/predict, /api/history
+  - Connects to MongoDB Atlas using Mongoose
+
+COMPONENT 5: Authentication System (node_backend/routes/auth.js)
+  - Handles user registration and login
+  - Passwords hashed using bcrypt (10 salt rounds)
+  - Issues JWT tokens valid for 24 hours
+  - Password validation: must contain uppercase, lowercase, number, special char
+
+COMPONENT 6: Prediction Route (node_backend/routes/predict.js)
+  - Protected by JWT middleware
+  - Forwards validated requests to FastAPI
+  - Saves every prediction to MongoDB (Prediction collection)
+  - Returns result + XAI explanations to frontend
+
+COMPONENT 7: History & Analytics Route (node_backend/routes/history.js)
+  - GET /api/history — Last 10 predictions for logged-in user
+  - DELETE /api/history/clear — Clears all history
+  - GET /api/history/analytics — MongoDB aggregation pipelines for charts:
+      * Average data usage by city (for radar chart)
+      * Average data usage by salary bracket (for bar chart)
+      * Raw scatter data (salary vs predicted data)
+
+COMPONENT 8: Frontend (frontend/)
+  - index.html: Login/Register page with split-panel layout
+  - dashboard.html: Main prediction dashboard
+  - models.html: Informational page about the ML models used
+  - style.css: Complete dark-themed design system
+  - script.js: All frontend logic (auth, prediction, charts, XAI rendering)
+
+COMPONENT 9: MongoDB Data Models (node_backend/models/)
+  - User.js: Stores username + bcrypt-hashed password
+  - Prediction.js: Stores all 15 input features + predicted_data_used_gb + timestamp
+  - Profile.js: Stores saved user profiles (name + inputs + predicted_gb)
+
+2.3 Startup Flow
+-----------------
+When start.bat is executed:
+  1. A new terminal opens the Python FastAPI server (uvicorn app:app --reload)
+  2. A new terminal starts the Node.js server (npm start)
+  3. After 3 seconds, the frontend index.html is opened in the browser
+  4. Node.js server also spawns FastAPI as a child process for reliability
+
+2.4 Authentication Flow
+------------------------
+  User enters username + password
+      -> Frontend sends POST /api/auth/login
+      -> Node.js checks MongoDB for user
+      -> bcrypt compares hashed password
+      -> If valid: JWT token issued, stored in localStorage
+      -> All future API calls include "Authorization: Bearer <token>"
+      -> JWT middleware verifies token on every protected route
+
+================================================================================
+CHAPTER 3: THE DATASET
+================================================================================
+
+3.1 Dataset Overview
+---------------------
+File: final_realistic_dataset.csv
+Size: ~38.5 MB (approximately 243,000+ rows)
+Format: Comma-Separated Values (CSV)
+Domain: Indian Telecom Industry
+
+The dataset represents simulated but realistic Indian telecom customer records.
+Each row corresponds to one unique customer. The dataset was built to mirror
+real-world patterns observed in India's telecom sector, which is dominated by
+four major operators: Reliance Jio, Airtel, Vodafone, and BSNL.
+
+3.2 Dataset Features (Columns)
+--------------------------------
+The dataset contains the following columns:
+
+  COLUMN NAME              TYPE         DESCRIPTION
+  ────────────────────────────────────────────────────────────────────────────
+  customer_id              String       Unique identifier (dropped during training)
+  pincode                  String/Int   Geographic pin code (dropped during training)
+  date_of_registration     Date         Account creation date (dropped)
+  state                    String       Indian state (dropped, city used instead)
+  churn                    Integer      Whether customer churned 0/1 (dropped)
+  telecom_partner          String       One of: Jio, Airtel, Vodafone, BSNL
+  gender                   String       M or F
+  age                      Integer      Customer age in years (range: ~5 to 120)
+  city                     String       Mumbai, Delhi, Bangalore, Chennai, etc.
+  num_dependents           Integer      Number of family dependents (0-15)
+  estimated_salary         Float        Annual income in Indian Rupees
+  calls_made               Integer      Total calls made in the month
+  sms_sent                 Integer      Total SMS messages sent in the month
+  streaming_hours          Float        Hours per day spent streaming video/music
+  gaming_hours             Float        Hours per day spent mobile gaming
+  social_media_hours       Float        Hours per day on social media platforms
+  wifi_ratio               Float        Proportion of time connected to Wi-Fi (0.0-1.0)
+  weekend_usage_ratio      Float        Proportion of data used on weekends (0.0-1.0)
+  background_data_mb       Float        Background app data consumption in MB/month
+  auto_update              Integer      Whether auto-updates are enabled (1=Yes, 0=No)
+  monthly_data_usage       Float        ** TARGET VARIABLE ** — Monthly data in GB
+
+3.3 Dataset Statistics (Approximate)
+--------------------------------------
+  Total Records:       ~243,000+ rows
+  Training Subset:     50,000 rows (subsampled for faster training)
+  Test Split:          20% (10,000 rows for evaluation)
+  Training Split:      80% (40,000 rows for model fitting)
+
+  KEY STATISTICS OF TARGET VARIABLE (monthly_data_usage):
+  ─────────────────────────────────────────────────────────
+  Mean:            ~5.01 GB
+  Std Deviation:   ~2.91 GB
+  Minimum:         ~0.00 GB (inactive SIMs)
+  Maximum:         ~15.00 GB (heavy users)
+  Median:          ~4.80 GB
+
+3.4 Telecom Partner Distribution
+----------------------------------
+India's market roughly reflects these major operators:
+  - Reliance Jio:   ~40% of customers (cheapest plans, highest data usage)
+  - Airtel:         ~30% of customers (premium plans, moderate-high usage)
+  - Vodafone:       ~20% of customers (moderate usage)
+  - BSNL:           ~10% of customers (lowest usage, older demographic)
+
+3.5 City Coverage
+------------------
+The dataset includes customers from major Indian metropolitan cities:
+  - Mumbai (Maharashtra)
+  - Bangalore (Karnataka)
+  - Delhi (National Capital Region)
+  - Chennai (Tamil Nadu)
+  - Hyderabad (Telangana)
+  - Kolkata (West Bengal)
+
+3.6 The inject_correlation.py Script
+--------------------------------------
+Before the final dataset was created, a correlation injection script was used
+to ensure that the target variable (data_used) had realistic, learnable
+relationships with the input features. The script works as follows:
+
+  base_usage = 2000 MB (baseline for all customers)
+
+  EFFECT ADDED:
+  1. Age Effect:      older_age = LESS data (age 20 uses +3000MB more than age 80)
+                      Formula: (50 - age) * 100
+  2. Salary Effect:   higher_salary = MORE data (premium plans, more content)
+                      Formula: (salary / 10000) * 150
+  3. Calls Effect:    more_calls = slightly MORE data
+                      Formula: calls_made * 10
+  4. Partner Effect:  Jio users get +1500MB bonus (cheapest plans = more usage)
+                      Airtel: +1000MB, Vodafone: +500MB, BSNL: -500MB
+  5. Random Noise:    Normal distribution, mean=0, std=800 MB
+                      (This ensures R² is not artificially perfect at 1.0)
+
+  Final data_used = base + age_effect + salary_effect + calls_effect +
+                    partner_effect + noise
+
+  Values clipped to minimum of 100 MB to avoid negative usage.
+
+================================================================================
+CHAPTER 4: DATA CLEANING & PREPROCESSING
+================================================================================
+
+4.1 Overview
+-------------
+Data cleaning is one of the most important steps in any machine learning pipeline.
+Raw data always contains noise, irrelevant columns, missing values, and mixed data
+types that must be resolved before a model can learn from them.
+
+4.2 Step 1 — Dropping Irrelevant Columns
+------------------------------------------
+The following columns were identified as non-predictive and dropped:
+
+  COLUMN               REASON FOR DROPPING
+  ──────────────────────────────────────────────────────────────────────────
+  customer_id          Unique identifier — no predictive value, causes data leakage
+  pincode              Too granular, highly sparse, replaced by 'city'
+  date_of_registration Not meaningful for predicting current usage
+  churn                Whether a customer left is NOT what we're predicting.
+                       Also, churn is an OUTCOME of dissatisfaction, not a
+                       cause of data usage. Including it would contaminate the model.
+  state                Redundant with 'city'; city is more specific
+
+  Code:
+  columns_to_drop = ['customer_id', 'pincode', 'date_of_registration', 'churn', 'state']
+  df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
+
+4.3 Step 2 — Handling Missing Values
+--------------------------------------
+Missing values (NaN) were handled by dropping all rows containing them.
+
+  Code: df = df.dropna()
+
+  RATIONALE: With 243,000+ rows, the dataset is large enough that dropping
+  incomplete rows does not significantly reduce the training sample size.
+  Simple imputation (mean/median filling) was considered but not needed
+  because the dataset had very few missing values overall.
+
+4.4 Step 3 — Subsampling for Performance
+------------------------------------------
+Since the full dataset has 243,000+ rows, training three models on the entire
+dataset on a local machine would take too long.
+
+  Code:
+  if len(df) > 50000:
+      df = df.sample(n=50000, random_state=42)
+
+  - 50,000 rows were randomly sampled using random_state=42 (reproducible)
+  - This sample is still statistically representative of the full dataset
+  - Training time reduced from potentially 30+ minutes to under 5 minutes
+
+4.5 Step 4 — Feature/Target Separation
+----------------------------------------
+The dataset was split into:
+  - X (features): All columns EXCEPT monthly_data_usage
+  - y (target):   Only monthly_data_usage column
+
+  Code:
+  X = df.drop(columns=['monthly_data_usage'])
+  y = df['monthly_data_usage']
+
+4.6 Step 5 — Identifying Column Types
+---------------------------------------
+Columns were categorized automatically:
+  - Numerical columns: age, num_dependents, estimated_salary, calls_made,
+                       sms_sent, streaming_hours, gaming_hours,
+                       social_media_hours, wifi_ratio, weekend_usage_ratio,
+                       background_data_mb, auto_update
+  - Categorical columns: telecom_partner, gender, city
+
+  Code:
+  categorical_cols = X.select_dtypes(include=['object', 'category']).columns.tolist()
+  numerical_cols   = X.select_dtypes(include=['number']).columns.tolist()
+
+4.7 Step 6 — Building the Preprocessing Pipeline
+--------------------------------------------------
+A scikit-learn ColumnTransformer was used to apply different preprocessing
+steps to different column types simultaneously:
+
+  FOR NUMERICAL COLUMNS → StandardScaler
+  ----------------------------------------
+  StandardScaler transforms each numerical feature so that it has:
+    - Mean = 0
+    - Standard Deviation = 1
+  Formula: z = (x - mean) / std_dev
+
+  WHY? Machine learning algorithms (especially gradient-based ones) perform
+  much better when all features are on the same scale. Without scaling,
+  a feature like 'estimated_salary' (range: 10,000 to 2,000,000) would
+  completely dominate features like 'wifi_ratio' (range: 0 to 1).
+
+  FOR CATEGORICAL COLUMNS → OneHotEncoder
+  -----------------------------------------
+  OneHotEncoder converts text categories into binary (0 or 1) columns.
+
+  Example — telecom_partner:
+    'Reliance Jio' → [1, 0, 0, 0]
+    'Airtel'       → [0, 1, 0, 0]
+    'Vodafone'     → [0, 0, 1, 0]
+    'BSNL'         → [0, 0, 0, 1]
+
+  parameter: handle_unknown='ignore' — If an unseen category appears during
+  prediction (e.g., a new telecom provider), the encoder ignores it instead
+  of crashing.
+
+  WHY? Models cannot process text strings mathematically. They require all
+  inputs to be numeric. One-Hot Encoding preserves the category information
+  without implying any ordinal relationship between categories.
+
+4.8 Step 7 — Train-Test Split
+-------------------------------
+The 50,000-row dataset was split:
+  - Training Set: 80% = 40,000 rows (used to train the model)
+  - Test Set:     20% = 10,000 rows (used ONLY for final evaluation)
+
+  Code:
+  X_train, X_test, y_train, y_test = train_test_split(
+      X, y, test_size=0.2, random_state=42
+  )
+
+  random_state=42 ensures that every time the code runs, the same split
+  is produced, making results reproducible.
+
+  WHY? The test set simulates completely new, unseen customers. If a model
+  only performs well on training data but poorly on test data, it has
+  'overfit' — memorized the training data instead of learning patterns.
+
+================================================================================
+CHAPTER 5: FEATURE ENGINEERING & TARGET VARIABLE
+================================================================================
+
+5.1 The Target Variable — monthly_data_usage
+---------------------------------------------
+The target variable is: monthly_data_usage (measured in Gigabytes, GB)
+
+This is what the model is trained to PREDICT. It represents the total amount
+of cellular mobile data a customer consumes over one calendar month.
+
+It is a CONTINUOUS numerical variable, which is why this is a REGRESSION
+problem (not classification). The model must predict an exact number (e.g.,
+4.72 GB), not a category (e.g., "high" or "low").
+
+Why is predicting this variable valuable?
+  - Telecom companies can offer personalized plan recommendations
+  - Customers understand whether they are likely to exceed their plan
+  - Marketing teams can target users likely to upgrade plans
+  - Network engineers can plan bandwidth allocation
+
+5.2 Relationship of Target Variable with Each Feature
+-------------------------------------------------------
+
+FEATURE: streaming_hours (Hours/day watching Netflix, YouTube, etc.)
+  RELATIONSHIP: STRONG POSITIVE
+  When a customer streams for many hours daily, they consume enormous amounts
+  of data — especially if not on Wi-Fi. Streaming at HD quality consumes
+  ~2.5 GB/hour. This is consistently the single strongest predictor of
+  monthly data usage.
+  THRESHOLD: >3 hours/day = HIGH impact, <1 hour/day = LOW impact
+  DIRECTION: Higher streaming_hours → Higher monthly_data_usage
+
+FEATURE: wifi_ratio (0.0 to 1.0 — proportion of time on Wi-Fi)
+  RELATIONSHIP: STRONG NEGATIVE
+  When a customer is connected to Wi-Fi most of the time, their cellular
+  data consumption drops dramatically. A wifi_ratio of 0.9 means 90% of
+  activity happens on Wi-Fi — so the cellular plan is barely used.
+  THRESHOLD: >0.7 = Heavily reduces prediction, <0.3 = Heavily increases it
+  DIRECTION: Higher wifi_ratio → Lower monthly_data_usage
+
+FEATURE: gaming_hours (Hours/day playing mobile games)
+  RELATIONSHIP: MODERATE POSITIVE
+  Online mobile gaming consumes continuous data (typically 40-100 MB/hour).
+  Heavy gamers (>2 hours/day) noticeably increase their data consumption.
+  DIRECTION: Higher gaming_hours → Higher monthly_data_usage
+
+FEATURE: social_media_hours (Hours/day on Instagram, Twitter, etc.)
+  RELATIONSHIP: MODERATE POSITIVE
+  Social media is a significant data consumer, especially with auto-playing
+  videos, stories, and reels. More hours = more data.
+  DIRECTION: Higher social_media_hours → Higher monthly_data_usage
+
+FEATURE: weekend_usage_ratio (0.0 to 1.0)
+  RELATIONSHIP: MODERATE POSITIVE (HEURISTIC-ADJUSTED)
+  This represents the proportion of the user's total monthly data that is
+  consumed specifically on weekends. A ratio of 0.28 is the mathematical
+  baseline (2 weekend days out of 7). Ratios significantly above 0.28 suggest
+  binge-watching habits on weekends, which increases total monthly usage.
+  Special heuristic applied in prediction:
+    weekend_modifier = 1.0 + (weekend_ratio - 0.28) * 0.4
+    predicted_gb = base_prediction * weekend_modifier
+  DIRECTION: Higher ratio above 0.28 → Multiplies prediction upward
+
+FEATURE: background_data_mb (MB consumed by background apps)
+  RELATIONSHIP: POSITIVE
+  Apps like email sync, cloud backup, OS updates, and push notifications
+  consume data silently. A high background_data_mb indicates the phone
+  is configured for high background activity.
+  DIRECTION: Higher background_data_mb → Higher monthly_data_usage
+
+FEATURE: auto_update (1=Yes, 0=No)
+  RELATIONSHIP: MILD POSITIVE
+  When automatic app updates are enabled over cellular data, the phone
+  downloads app updates without user intervention, consuming significant data.
+  DIRECTION: auto_update=1 → Slightly Higher monthly_data_usage
+
+FEATURE: estimated_salary (Annual income in Rupees)
+  RELATIONSHIP: MILD POSITIVE
+  Higher-income customers tend to use more data because:
+    1. They subscribe to premium streaming services (Netflix 4K, etc.)
+    2. They are more likely to have higher-tier data plans
+    3. They are less likely to conserve data due to cost concerns
+  DIRECTION: Higher salary → Slightly Higher monthly_data_usage
+
+FEATURE: age (Years)
+  RELATIONSHIP: MODERATE NEGATIVE
+  Younger customers (teens, 20s) use significantly more data than older
+  customers. Young people stream more, game more, and use social media more.
+  DIRECTION: Younger age → Higher monthly_data_usage
+
+FEATURE: telecom_partner (Categorical)
+  RELATIONSHIP: CATEGORICAL INFLUENCE
+  - Jio users tend to use MORE data (cheapest plans, removes cost barrier)
+  - Airtel users use moderate-high data (premium market)
+  - Vodafone users use moderate data
+  - BSNL users use LESS data (older customer base, limited 4G coverage)
+
+FEATURE: city (Categorical)
+  RELATIONSHIP: MODERATE INFLUENCE
+  Cities with better 4G/5G coverage and higher tech-savvy populations
+  (Bangalore, Mumbai) tend to have higher data usage than others.
+
+FEATURE: gender (Categorical)
+  RELATIONSHIP: MILD INFLUENCE
+  Statistical analysis shows mild differences in data usage patterns between
+  genders, mainly because of different content consumption habits.
+
+FEATURE: num_dependents (Number of dependents)
+  RELATIONSHIP: MILD INFLUENCE
+  More dependents may mean sharing a device/plan or having less personal
+  screen time, slightly reducing individual data usage.
+
+FEATURE: calls_made (Number of calls in the month)
+  RELATIONSHIP: MILD INDICATOR
+  High call volume indicates a heavy phone user overall. However, voice calls
+  on modern VoLTE networks consume minimal data compared to streaming.
+  A customer with 0 calls AND 0 SMS is flagged as an inactive SIM and
+  predicted to have 0 GB data usage (hard business rule).
+
+FEATURE: sms_sent (Number of SMS in the month)
+  RELATIONSHIP: MILD INDICATOR — used in the inactive SIM rule.
+  If calls_made=0 AND sms_sent=0, predicted data = 0 GB automatically.
+
+5.3 The Inactive SIM Business Rule
+------------------------------------
+A hard-coded business rule overrides the ML model in one specific case:
+  IF (calls_made == 0) AND (sms_sent == 0):
+      RETURN predicted_data_used_gb = 0
+
+RATIONALE: A SIM that has made zero calls and zero SMS in a month is almost
+certainly inactive, suspended, or a secondary/backup SIM. It would be
+nonsensical for the ML model to predict non-zero data for such a card. This
+rule ensures the prediction makes practical telecom business sense.
+
+================================================================================
+END OF PART 1
+CONTINUE READING: REPORT_PART2.txt
+================================================================================
